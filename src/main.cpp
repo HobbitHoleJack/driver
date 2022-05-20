@@ -26,9 +26,11 @@ void competition_initialize() {}
 
 void autonomous() {
 
-	pros::ADIEncoder left_enc (A, B, false);
-	pros::ADIEncoder right_enc (C, D, false);
-	pros::ADIEncoder back_enc (E, F, false);
+
+
+	pros::ADIEncoder left_enc ('A', 'B', false);
+	pros::ADIEncoder right_enc ('C', 'D', false);
+	pros::ADIEncoder back_enc ('E', 'F', false);
 	// 1 tick on encoders should == 0.0283616"
 } 
 
