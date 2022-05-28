@@ -1,10 +1,9 @@
 #include "main.h"
 #include "pros/rtos.hpp"
+#include "gif-pros/gifclass.hpp"
+using namespace okapi;
 
-int heading;
 
-double x_pos = 0;
-double y_pos = 0;
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -31,39 +30,30 @@ void disabled() {}
 void competition_initialize() {}
 
 
-void odometry_fn() {
-
-	#define LR_distance_from_center 5
-	#define pi 3.14159
-
-	int heading_rad{0};
-	double current_l{0};
-	double current_r{0};
-	double current_b{0};
-
-	pros::ADIEncoder left_enc ('A', 'B', false);
-	pros::ADIEncoder right_enc ('C', 'D', false);
-	pros::ADIEncoder back_enc ('E', 'F', false);
-	// 1 tick on encoders should == 0.0283616"
-
-	while (1) {
-
-		current_l = left_enc.get_value();
-		current_r = right_enc.get_value();
-		current_b = back_enc.get_value();
-
-		heading_rad = (current_l - current_r) / LR_distance_from_center;
-		heading = heading_rad * (180/pi);
-
-		pros::delay(10);
-	}
-	
-}
+void odometry() {}
 
 void autonomous() {
-	
-	pros::Task odometry(odometry_fn);
-	
+	std::shared_ptr<OdomChassisController> chassis =
+		ChassisControllerBuilder()
+		.withMotors(1, -2) // left motor is 1, right motor is 2 (reversed)
+		.withGains(
+			{0.001, 0, 0.0001}, // distance controller gains
+			{0.001, 0, 0.0001}, // turn controller gains
+			{0.001, 0, 0.0001}  // angle controller gains (helps drive straight)
+		)
+		.withSensors(
+			ADIEncoder{'A', 'B'}, // left encoder in ADI ports A & B
+			ADIEncoder{'C', 'D', true},  // right encoder in ADI ports C & D (reversed)
+			ADIEncoder{'E', 'F'}  // middle encoder in ADI ports E & F
+		)
+		// green gearset, tracking wheel diameter (2.75 in), track (7 in), and TPR (360)
+		// 1 inch middle encoder distance, and 2.75 inch middle wheel diameter
+		.withDimensions(AbstractMotor::gearset::green, {{3.25_in, 7_in, 1_in, 2.75_in}, quadEncoderTPR})
+		.withOdometry() // use the same scales as the chassis (above)
+		.buildOdometry(); // build an odometry chassis
+
+
+	chassis->setState({0_in, 0_in, 0_deg});
 } 
 
 void opcontrol() {}
