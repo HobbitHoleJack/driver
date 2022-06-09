@@ -2,38 +2,9 @@
 #include "pros/rtos.hpp"
 #include "gif-pros/gifclass.hpp"
 using namespace okapi;
+int auton_side = -1;
 
-
-
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
-void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "h");
-}
-
-void disabled() {}
-
-/**
- * Runs after initialize(), and before autonomous when connected to the Field
- * Management System or the VEX Competition Switch. This is intended for
- * competition-specific initialization routines, such as an autonomous selector
- * on the LCD.
- *
- * This task will exit when the robot is enabled and autonomous or opcontrol
- * starts.
- */
-void competition_initialize() {}
-
-
-void odometry() {}
-
-void autonomous() {
-	std::shared_ptr<OdomChassisController> chassis =
+std::shared_ptr<OdomChassisController> chassis =
 		ChassisControllerBuilder()
 		.withMotors(1, -2) // left motor is 1, right motor is 2 (reversed)
 		.withGains(
@@ -51,6 +22,57 @@ void autonomous() {
 		.withDimensions(AbstractMotor::gearset::green, {{3.25_in, 7_in, 1_in, 2.75_in}, quadEncoderTPR})
 		.withOdometry() // use the same scales as the chassis (above)
 		.buildOdometry(); // build an odometry chassis
+
+
+void on_center_button() {
+	auton_side = 1;
+	pros::lcd::set_text(1, "No auton");
+}
+
+void on_left_button() {
+	auton_side = 0;
+	pros::lcd::set_text(1, "Left side auton ready");
+}
+
+void on_right_button() {
+	auton_side = 2;
+	pros::lcd::set_text(1, "Right side auton ready");
+}
+
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
+void initialize() {
+	pros::lcd::initialize();
+	pros::lcd::set_text(1, "Please select an auton");
+
+}
+
+void disabled() {}
+
+/**
+ * Runs after initialize(), and before autonomous when connected to the Field
+ * Management System or the VEX Competition Switch. This is intended for
+ * competition-specific initialization routines, such as an autonomous selector
+ * on the LCD.
+ *
+ * This task will exit when the robot is enabled and autonomous or opcontrol
+ * starts.
+ */
+void competition_initialize() {
+	pros::lcd::register_btn1_cb(on_center_button);
+	pros::lcd::register_btn0_cb(on_left_button);
+	pros::lcd::register_btn2_cb(on_right_button);
+}
+
+
+void odometry() {}
+
+void autonomous() {
+	
 
 
 	chassis->setState({0_in, 0_in, 0_deg});
