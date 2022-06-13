@@ -1,6 +1,6 @@
 #include "main.h"
 #include "pros/rtos.hpp"
-#include "gif-pros/gifclass.hpp"
+#include "autoSelect/selection.h"
 using namespace okapi;
 int auton_side = -1;
 
