@@ -1,4 +1,7 @@
 #include "main.h"
+#include "okapi/api/odometry/odometry.hpp"
+#include "okapi/api/units/QAcceleration.hpp"
+#include "pros/adi.hpp"
 #include "pros/rtos.hpp"
 #include "autoSelect/selection.h"
 using namespace okapi;
@@ -68,8 +71,17 @@ void competition_initialize() {
 	pros::lcd::register_btn2_cb(on_right_button);
 }
 
+void Odometry() {
+	int l_enc, r_enc, b_enc;
+	int old_l_enc{0}, old_r_enc{0}, old_b_enc{0};
+	pros::ADIEncoder left_encoder ('A', 'B');
+	pros::ADIEncoder right_encoder ('C', 'D');
+	pros::ADIEncoder back_encoder ('E', 'F');
+	l_enc = left_encoder.get_value();
+	r_enc = right_encoder.get_value();
+	b_enc = back_encoder.get_value();
 
-void odometry() {}
+}
 
 void autonomous() {
 	
