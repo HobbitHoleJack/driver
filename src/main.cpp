@@ -3,7 +3,6 @@
 #include "okapi/api/units/QAcceleration.hpp"
 #include "pros/adi.hpp"
 #include "pros/rtos.hpp"
-#include "gif-pros/gifclass.hpp"
 using namespace okapi;
 int auton_side = -1;
 
@@ -72,14 +71,41 @@ void competition_initialize() {
 }
 
 void Odometry() {
-	int l_enc, r_enc, b_enc;
+	#define center 7
+	double L, R, S;
+	double Lr{0}, Rr{0};
+	int l_enc{0}, r_enc{0}, b_enc{0};
 	int old_l_enc{0}, old_r_enc{0}, old_b_enc{0};
+	int global_h{0};
+	int abs_orientation{0};
+	int angle_change;
 	pros::ADIEncoder left_encoder ('A', 'B');
 	pros::ADIEncoder right_encoder ('C', 'D');
 	pros::ADIEncoder back_encoder ('E', 'F');
-	l_enc = left_encoder.get_value();
-	r_enc = right_encoder.get_value();
-	b_enc = back_encoder.get_value();
+	while(1){
+
+		l_enc = left_encoder.get_value();
+		r_enc = right_encoder.get_value();
+		b_enc = back_encoder.get_value();
+
+		L = ((l_enc * (3.14159265359/180)) * 1.625) - old_l_enc;
+		R =  ((r_enc * (3.14159265359/180)) * 1.625) - old_r_enc;
+		S = ((b_enc * (3.14159265359/180)) * 1.625) - old_b_enc;
+
+		old_l_enc = L;
+		old_r_enc = R;
+		old_b_enc = S;
+
+		Lr = Lr + L;
+		Rr = Rr + R;
+		
+		abs_orientation = global_h + ((Lr - Rr) / center);
+
+
+		pros::delay(10);
+	}
+
+
 
 }
 
