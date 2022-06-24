@@ -3,6 +3,8 @@
 #include "okapi/api/units/QAcceleration.hpp"
 #include "pros/adi.hpp"
 #include "pros/rtos.hpp"
+#include "autoSelect/selection.h"
+#include <string>
 using namespace okapi;
 int auton_side = -1;
 
@@ -21,25 +23,9 @@ std::shared_ptr<OdomChassisController> chassis =
 		)
 		// green gearset, tracking wheel diameter (2.75 in), track (7 in), and TPR (360)
 		// 1 inch middle encoder distance, and 2.75 inch middle wheel diameter
-		.withDimensions(AbstractMotor::gearset::green, {{3.25_in, 7_in, 1_in, 2.75_in}, quadEncoderTPR})
+		.withDimensions(AbstractMotor::gearset::blue, {{3.25_in, 7_in, 1_in, 3.25_in}, quadEncoderTPR})
 		.withOdometry() // use the same scales as the chassis (above)
 		.buildOdometry(); // build an odometry chassis
-
-
-void on_center_button() {
-	auton_side = 1;
-	pros::lcd::set_text(1, "No auton");
-}
-
-void on_left_button() {
-	auton_side = 0;
-	pros::lcd::set_text(1, "Left side auton ready");
-}
-
-void on_right_button() {
-	auton_side = 2;
-	pros::lcd::set_text(1, "Right side auton ready");
-}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -48,8 +34,7 @@ void on_right_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Please select an auton");
+
 
 }
 
@@ -64,56 +49,29 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {
-	pros::lcd::register_btn1_cb(on_center_button);
-	pros::lcd::register_btn0_cb(on_left_button);
-	pros::lcd::register_btn2_cb(on_right_button);
-}
+void competition_initialize() {}
 
 void Odometry() {
-	#define center 7
-	double L, R, S;
-	double Lr{0}, Rr{0};
-	int l_enc{0}, r_enc{0}, b_enc{0};
+	int l_enc, r_enc, b_enc;
 	int old_l_enc{0}, old_r_enc{0}, old_b_enc{0};
-	int global_h{0};
-	int abs_orientation{0};
-	int angle_change;
 	pros::ADIEncoder left_encoder ('A', 'B');
 	pros::ADIEncoder right_encoder ('C', 'D');
 	pros::ADIEncoder back_encoder ('E', 'F');
-	while(1){
-
-		l_enc = left_encoder.get_value();
-		r_enc = right_encoder.get_value();
-		b_enc = back_encoder.get_value();
-
-		L = ((l_enc * (3.14159265359/180)) * 1.625) - old_l_enc;
-		R =  ((r_enc * (3.14159265359/180)) * 1.625) - old_r_enc;
-		S = ((b_enc * (3.14159265359/180)) * 1.625) - old_b_enc;
-
-		old_l_enc = L;
-		old_r_enc = R;
-		old_b_enc = S;
-
-		Lr = Lr + L;
-		Rr = Rr + R;
-		
-		abs_orientation = global_h + ((Lr - Rr) / center);
-
-
-		pros::delay(10);
-	}
-
-
+	l_enc = left_encoder.get_value();
+	r_enc = right_encoder.get_value();
+	b_enc = back_encoder.get_value();
 
 }
 
 void autonomous() {
-	
+	pros::lcd::set_text(1, "Auton");
+	pros::lcd::set_text(2, std::to_string(auton_side));
 
 
-	chassis->setState({0_in, 0_in, 0_deg});
 } 
 
-void opcontrol() {}
+void opcontrol() {
+
+	pros::lcd::set_text(1, "Driver Control");
+	pros::lcd::set_text(2, "");
+}
