@@ -78,6 +78,10 @@ void autonomous() {
 } 
 
 void opcontrol() {
+	#define L_drive_1 3
+	#define L_drive_2 4
+	#define R_drive_1 5
+	#define R_drive_2 6
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::Motor top(1);
 	pros::Motor bottom(2, true);
@@ -95,16 +99,13 @@ while(true) {
 				top.move(127);
 				bottom.move(127);
 				L1_state = L1_state + 1;
-				L1_held = !L1_held;
-			}
+				L1_held = !L1_held;}
 			else {
 			top.brake();
 			bottom.brake();
 			L1_state = L1_state + 1;
-			L1_held = !L1_held;
-			}
-		}
-   }
+			L1_held = !L1_held;}}}
+
 	else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {L1_held = false;}
 	//end flywheel toggle code
 
