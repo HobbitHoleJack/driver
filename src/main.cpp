@@ -71,7 +71,36 @@ void autonomous() {
 } 
 
 void opcontrol() {
+	pros::Controller master(pros::E_CONTROLLER_MASTER);
+	pros::Motor top(1);
+	pros::Motor bottom(2, true);
 
-	pros::lcd::set_text(1, "Driver Control");
-	pros::lcd::set_text(2, "");
+int L1_state{0};
+bool L1_held{false};
+top.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+bottom.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
+while(true) {
+	// flywheel toggle
+	if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
+		if (!L1_held){
+			if (L1_state % 2 == 0){
+				top.move(127);
+				bottom.move(127);
+				L1_state = L1_state + 1;
+				L1_held = !L1_held;
+			}
+			else {
+			top.brake();
+			bottom.brake();
+			L1_state = L1_state + 1;
+			L1_held = !L1_held;
+			}
+		}
+   }
+	else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {L1_held = false;}
+	//end flywheel toggle code
+
+	pros::delay(20);
 }
+	}
