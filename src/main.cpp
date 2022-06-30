@@ -5,6 +5,7 @@
 #include "pros/rtos.hpp"
 #include "autoSelect/selection.h"
 #include <string>
+#include <cmath>
 int auton_side = -1;
 
 /**
@@ -33,13 +34,18 @@ void competition_initialize() {}
 
 void Odometry() {
 	#define center 7
+	#define right_to_center 3.5
+	#define back_to_center 7
 	double L, R, S;
 	double Lr{0}, Rr{0};
+	double local_offset;
 	int l_enc{0}, r_enc{0}, b_enc{0};
 	int old_l_enc{0}, old_r_enc{0}, old_b_enc{0};
-	int global_h{0};
+	int h_at_reset{0};
 	int abs_orientation{0};
 	int angle_change;
+	int old_abs_orientation;
+	int avg_orientation;
 	pros::ADIEncoder left_encoder ('A', 'B');
 	pros::ADIEncoder right_encoder ('C', 'D');
 	pros::ADIEncoder back_encoder ('E', 'F');
@@ -57,10 +63,23 @@ void Odometry() {
 		old_r_enc = R;
 		old_b_enc = S;
 
+		old_abs_orientation = abs_orientation;
+
 		Lr = Lr + L;
 		Rr = Rr + R;
 		
-		abs_orientation = global_h + ((Lr - Rr) / center);
+		abs_orientation = h_at_reset + ((Lr - Rr) / center);
+
+		angle_change = abs_orientation - old_abs_orientation;
+
+		if (angle_change == 0){local_offset = S / R;}
+
+		else{local_offset = (2 * (sin(angle_change/2))) * (((S / angle_change) + back_to_center) / ((R / angle_change) + right_to_center));}
+
+		avg_orientation = old_abs_orientation + (angle_change/2);
+
+		
+
 
 
 		pros::delay(10);
