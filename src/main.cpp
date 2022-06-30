@@ -87,28 +87,22 @@ void opcontrol() {
 	pros::Motor bottom(2, true);
 
 int L1_state{0};
-bool L1_held{false};
 top.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 bottom.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
 while(true) {
 	// flywheel toggle
-	if(master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
-		if (!L1_held){
+	if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
 			if (L1_state % 2 == 0){
 				top.move(127);
 				bottom.move(127);
-				L1_state = L1_state + 1;
-				L1_held = !L1_held;}
+				L1_state = L1_state + 1;}
 			else {
 			top.brake();
 			bottom.brake();
-			L1_state = L1_state + 1;
-			L1_held = !L1_held;}}}
+			L1_state = L1_state + 1;}}}
 
-	else if (!master.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {L1_held = false;}
 	//end flywheel toggle code
 
 	pros::delay(20);
 }
-	}
