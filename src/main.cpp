@@ -12,39 +12,45 @@
 using namespace pros;
 int auton_side = -1;
 
+//global odom variables 
 
 int degrees;
 double posX, posY;
+bool odom{false};
 
 void Odometry() {
-	bool odom{true};
-	#define center 5
-	#define back_to_center 0
-	int oldR{0}, oldL{0}, oldB{0}, head;
-	double cst = M_PI * 3.25 / 360;
+	#define center 5 // distance between side wheels
+	#define back_to_center 0 // yes
+	int oldR{0}, oldL{0}, oldB{0}, head, R, L, B;
+	double cst = M_PI * 3.25 / 360; // inches per encoder tick
 	double dX, dY, dH, dR, dL, dB;
 
-	pros::ADIEncoder left ('A', 'B');
-	pros::ADIEncoder right ('G', 'H', true);
-	pros::ADIEncoder back ('E', 'F');
+	pros::ADIEncoder left ('A', 'B', true);
+	pros::ADIEncoder right ('G', 'H');
+	pros::ADIEncoder back ('E', 'F', true);
 	while (odom) {
-        dR = right.get_value() - oldR;
-        dL = left.get_value() - oldL;
-        dB = back.get_value() - oldB;
+
+		R = right.get_value();
+		L = left.get_value();
+		B = back.get_value();
+
+        dR = R - oldR;
+        dL = L - oldL;  // getting the change in degrees from the last cycle
+        dB = B - oldB;
         
         dX = cst * (dB - back_to_center * ((dR + dL) / center));
-        dY = cst * (dR + dL) / 2;
+        dY = cst * (dR + dL) / 2;									// calculate change in x, y, and heading
         dH = cst * (dR - dL) / center;
     
         head += dH;
-        degrees = head * 180 / M_PI;
+        degrees = head * 180 / M_PI;	// add the change in heading to the global heading, and then convert to degrees
   
         posX += dX * cos(head) - dY * sin(head);
-        posY += dX * sin(head) + dY * cos(head);
+        posY += dX * sin(head) + dY * cos(head); // add the change in x and y to the global position
 
-        oldR = right.get_value();
-        oldL = left.get_value();
-        oldB = back.get_value();
+        oldR = R;
+        oldL = L; // update old encoder values
+        oldB = B;
 
         pros::delay(10);
     }
@@ -88,11 +94,14 @@ void opcontrol() {
 	pros::Motor left_1(7, true), left_2(8,true), right_2(10), right_1(9), bottom(2, true), top(1);;
 
 int L1_state{0};
-top.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-bottom.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-
 
 while(true) {
+	std::string heading = std::to_string(degrees);
+	std::string x = std::to_string(posX);
+	std::string y = std::to_string(posY);
+	lcd::print(1, heading.c_str());
+	lcd::print(2, x.c_str());
+	lcd::print(3, y.c_str());
 	// flywheel toggle
 	if(master.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
 			if (L1_state % 2 == 0){
