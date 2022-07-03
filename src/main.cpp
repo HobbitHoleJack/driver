@@ -4,9 +4,31 @@
 #include "pros/adi.hpp"
 #include "pros/rtos.hpp"
 #include "autoSelect/selection.h"
+#include <iterator>
+#include <ostream>
 #include <string>
 #include <cmath>
+using namespace okapi;
 int auton_side = -1;
+
+std::shared_ptr<OdomChassisController> chassis =
+		ChassisControllerBuilder()
+		.withMotors({-7, -8}, {9, 10}) // left motor is 1, right motor is 2 (reversed)
+		.withGains(
+			{0.001, 0, 0.0001}, // distance controller gains
+			{.005, 0, 0.0003}, // turn controller gains
+			{0.001, 0, 0.0001}  // angle controller gains (helps drive straight)
+		)
+		.withSensors(
+			ADIEncoder{'A', 'B', true}, // left encoder in ADI ports A & B
+			ADIEncoder{'G', 'H'},  // right encoder in ADI ports C & D (reversed)
+			ADIEncoder{'E', 'F', true}  // middle encoder in ADI ports E & F
+		)
+		// green gearset, tracking wheel diameter (2.75 in), track (7 in), and TPR (360)
+		// 1 inch middle encoder distance, and 2.75 inch middle wheel diameter
+		.withDimensions(AbstractMotor::gearset::blue, {{3.25_in, 5_in, 0_in, 3.25_in}, quadEncoderTPR})
+		.withOdometry() // use the same scales as the chassis (above)
+		.buildOdometry(); // build an odometry chassis
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -105,9 +127,16 @@ void opcontrol() {
 	pros::Motor top(1);
 	pros::Motor bottom(2, true);
 
+	pros::Motor right_1(9);
+	pros::Motor right_2(10);
+
+	pros::Motor left_1(7, true);
+	pros::Motor left_2(8,true);
+
 int L1_state{0};
 top.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 bottom.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+
 
 while(true) {
 	// flywheel toggle
@@ -122,6 +151,13 @@ while(true) {
 			L1_state = L1_state + 1;}}}
 
 	//end flywheel toggle code
+
+	//start drive code
+	left_1.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+	left_2.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+
+	right_1.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) + master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
+	right_2.move(master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y) - master.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
 
 	pros::delay(20);
 }
